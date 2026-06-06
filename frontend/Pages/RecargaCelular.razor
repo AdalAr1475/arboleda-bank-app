@@ -1,0 +1,261 @@
+@page "/"
+@using System.Globalization
+@inject RecargaApiClient Api
+
+<div class="recarga-wrap">
+
+@if (resultado is null)
+{
+    <h1 class="recarga-title">Recarga celular</h1>
+
+    <div class="saldo-card">
+        <span class="saldo-label">Saldo disponible</span>
+        <span class="saldo-monto">@(saldoActual.HasValue ? $"S/ {saldoActual.Value:0.00}" : "—")</span>
+    </div>
+
+    <div class="field">
+        <label class="field-label">Número de celular</label>
+        <div class="input-icon">
+            <span class="ico">📱</span>
+            <input class="@CssCelular" type="tel" inputmode="numeric" maxlength="9"
+                   placeholder="Ej. 987654321"
+                   @bind="Celular" @bind:event="oninput" />
+        </div>
+        @if (mostrarErrores && !CelularValido)
+        {
+            <p class="field-error">El número debe tener 9 dígitos</p>
+        }
+    </div>
+
+    <div class="field">
+        <label class="field-label">Operador</label>
+        <div class="chips">
+            @foreach (var op in operadores)
+            {
+                <button type="button"
+                        class="@("chip" + (operadorId == op.Id ? " chip-active" : ""))"
+                        @onclick="() => operadorId = op.Id">
+                    @op.Nombre
+                </button>
+            }
+        </div>
+        @if (operadores.Count == 0)
+        {
+            <p class="field-hint">Cargando operadores…</p>
+        }
+        @if (mostrarErrores && operadorId is null)
+        {
+            <p class="field-error">Selecciona un operador</p>
+        }
+    </div>
+
+    <div class="field">
+        <label class="field-label">Monto a recargar</label>
+        <div class="chips">
+            @foreach (var m in montosPreset)
+            {
+                <button type="button"
+                        class="@("chip" + (monto == m ? " chip-active" : ""))"
+                        @onclick="() => SeleccionarPreset(m)">
+                    S/ @m
+                </button>
+            }
+        </div>
+        <div class="input-icon monto-input">
+            <span class="ico">S/</span>
+            <input class="@CssMonto" type="text" inputmode="decimal"
+                   placeholder="Otro monto"
+                   @bind="MontoTexto" @bind:event="oninput" />
+        </div>
+        @if (mostrarErrores && !MontoValido)
+        {
+            <p class="field-error">Ingresa un monto válido (entre 0.01 y 500.00)</p>
+        }
+    </div>
+
+    @if (errorMsg is not null)
+    {
+        <div class="alert-error">@errorMsg</div>
+    }
+
+    <button class="btn-primary" @onclick="Confirmar" disabled="@enviando">
+        @if (enviando)
+        {
+            <span>Procesando…</span>
+        }
+        else
+        {
+            <span>⚡ Confirmar recarga</span>
+        }
+    </button>
+
+    <p class="secure-note">🔒 Transacción segura encriptada.</p>
+}
+else
+{
+    <div class="exito">
+        <div class="check-circle">✓</div>
+        <h2 class="exito-title">Recarga realizada<br />con éxito</h2>
+
+        <div class="resumen-card">
+            <div class="resumen-row">
+                <span>Número</span>
+                <strong>@FormatearCelular(celularConfirmado)</strong>
+            </div>
+            <div class="resumen-row">
+                <span>Operador</span>
+                <strong>@operadorConfirmado</strong>
+            </div>
+            <div class="resumen-row">
+                <span>Monto</span>
+                <strong class="monto-ok">S/ @montoConfirmado.ToString("0.00")</strong>
+            </div>
+        </div>
+
+        <p class="saldo-restante-label">Nuevo saldo restante</p>
+        <p class="saldo-restante">S/ @(resultado.SaldoRestante?.ToString("0.00") ?? "—")</p>
+
+        <button class="btn-primary" @onclick="Reiniciar">Hacer otra recarga</button>
+    </div>
+}
+
+</div>
+
+@code {
+    private readonly decimal[] montosPreset = { 5m, 10m, 20m, 50m };
+
+    private List<Operador> operadores = new();
+    private decimal? saldoActual = 500.00m;
+
+    private string _celular = "";
+    private int? operadorId;
+    private decimal? monto;
+    private string _montoTexto = "";
+
+    private string idempotencyKey = Guid.NewGuid().ToString();
+    private bool enviando;
+    private bool mostrarErrores;
+    private string? errorMsg;
+
+    // Datos congelados para la pantalla de éxito.
+    private RecargaResponse? resultado;
+    private string celularConfirmado = "";
+    private string operadorConfirmado = "";
+    private decimal montoConfirmado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            operadores = await Api.GetOperadoresAsync();
+        }
+        catch
+        {
+            errorMsg = "No se pudo conectar con el backend (¿está corriendo en el puerto 5080?).";
+        }
+    }
+
+    // --- Celular: solo dígitos, máximo 9 ---
+    private string Celular
+    {
+        get => _celular;
+        set => _celular = new string(value.Where(char.IsDigit).Take(9).ToArray());
+    }
+
+    // --- Monto personalizado: texto numérico ---
+    private string MontoTexto
+    {
+        get => _montoTexto;
+        set
+        {
+            _montoTexto = value;
+            monto = TryParseMonto(value, out var m) ? m : null;
+        }
+    }
+
+    private void SeleccionarPreset(decimal m)
+    {
+        monto = m;
+        _montoTexto = m.ToString("0.##", CultureInfo.InvariantCulture);
+    }
+
+    private bool CelularValido =>
+        _celular.Length == 9 && _celular.All(char.IsDigit);
+
+    private bool MontoValido =>
+        monto is > 0m and <= 500m;
+
+    private string CssCelular =>
+        "text-input" + (mostrarErrores && !CelularValido ? " input-error" : "");
+
+    private string CssMonto =>
+        "text-input" + (mostrarErrores && !MontoValido ? " input-error" : "");
+
+    private static bool TryParseMonto(string s, out decimal value)
+    {
+        s = (s ?? "").Trim().Replace(",", ".");
+        return decimal.TryParse(s, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out value);
+    }
+
+    private async Task Confirmar()
+    {
+        errorMsg = null;
+        mostrarErrores = true;
+
+        // Validación de cliente que REFLEJA (no reemplaza) la del backend.
+        if (!CelularValido || operadorId is null || !MontoValido)
+            return;
+
+        enviando = true; // deshabilita el botón mientras la petición está en curso
+        try
+        {
+            var req = new RecargaRequest
+            {
+                Celular = _celular,
+                OperadorId = operadorId.Value,
+                Monto = monto!.Value,
+                IdempotencyKey = idempotencyKey
+            };
+
+            var resp = await Api.PostRecargaAsync(req);
+
+            if (resp.Ok)
+            {
+                // Congelar datos para el resumen y mostrar la pantalla de éxito.
+                celularConfirmado = _celular;
+                operadorConfirmado = operadores.FirstOrDefault(o => o.Id == operadorId)?.Nombre ?? "";
+                montoConfirmado = monto!.Value;
+                saldoActual = resp.SaldoRestante;
+                resultado = resp;
+            }
+            else
+            {
+                errorMsg = resp.Error ?? "No se pudo procesar la recarga.";
+            }
+        }
+        catch
+        {
+            errorMsg = "No se pudo conectar con el backend. Verifica que esté corriendo.";
+        }
+        finally
+        {
+            enviando = false;
+        }
+    }
+
+    private void Reiniciar()
+    {
+        // Nueva key SOLO tras una recarga exitosa.
+        idempotencyKey = Guid.NewGuid().ToString();
+        resultado = null;
+        _celular = "";
+        operadorId = null;
+        monto = null;
+        _montoTexto = "";
+        mostrarErrores = false;
+        errorMsg = null;
+    }
+
+    private static string FormatearCelular(string c) =>
+        c.Length == 9 ? $"{c[..3]} {c.Substring(3, 3)} {c.Substring(6, 3)}" : c;
+}

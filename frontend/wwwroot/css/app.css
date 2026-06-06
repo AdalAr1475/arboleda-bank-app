@@ -1,0 +1,150 @@
+:root {
+    --verde: #1b4332;
+    --verde-osc: #14361f;
+    --verde-claro: #2d6a4f;
+    --rojo: #b21f3a;
+    --gris-bg: #f4f3f1;
+    --gris-borde: #e2e0dc;
+    --texto: #2b2b2b;
+}
+
+html, body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    margin: 0;
+    background: var(--gris-bg);
+    color: var(--texto);
+}
+
+h1:focus { outline: none; }
+
+/* ---------- Shell / topbar ---------- */
+.app-shell { min-height: 100vh; display: flex; flex-direction: column; }
+
+.topbar {
+    background: #fbfaf8;
+    border-bottom: 1px solid var(--gris-borde);
+    padding: 0.85rem 1.5rem;
+}
+
+.brand { display: flex; align-items: center; gap: 0.5rem; }
+.brand-mark { font-size: 1.2rem; }
+.brand-name { color: var(--verde); font-weight: 700; font-size: 1.05rem; }
+
+.app-main { flex: 1; display: flex; justify-content: center; padding: 2.5rem 1rem; }
+
+/* ---------- Formulario de recarga ---------- */
+.recarga-wrap { width: 100%; max-width: 460px; }
+
+.recarga-title { color: var(--verde); font-size: 1.9rem; font-weight: 800; margin: 0 0 1.25rem; }
+
+.saldo-card {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #ece9e4; border-radius: 10px; padding: 0.9rem 1.1rem; margin-bottom: 1.4rem;
+}
+.saldo-label { color: #555; }
+.saldo-monto { font-weight: 700; font-size: 1.05rem; }
+
+.field { margin-bottom: 1.3rem; }
+.field-label { display: block; font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem; }
+.field-hint { color: #888; font-size: 0.82rem; margin: 0.4rem 0 0; }
+.field-error { color: var(--rojo); font-size: 0.82rem; margin: 0.4rem 0 0; }
+
+.input-icon { position: relative; }
+.input-icon .ico {
+    position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%);
+    color: #9a9a9a; font-size: 0.95rem;
+}
+.text-input {
+    width: 100%; box-sizing: border-box;
+    padding: 0.8rem 0.9rem 0.8rem 2.4rem;
+    border: 1px solid var(--gris-borde); border-radius: 9px;
+    font-size: 1rem; background: #fff; outline: none;
+}
+.text-input:focus { border-color: var(--verde-claro); box-shadow: 0 0 0 3px rgba(45,106,79,0.12); }
+.input-error { border-color: var(--rojo) !important; box-shadow: 0 0 0 3px rgba(178,31,58,0.12); }
+.monto-input { margin-top: 0.7rem; }
+
+/* chips de operador / monto */
+.chips { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.chip {
+    flex: 1 1 0; min-width: 84px;
+    padding: 0.7rem 0.5rem; border: 1px solid var(--gris-borde); border-radius: 9px;
+    background: #fff; color: #6b4a1f; font-weight: 600; cursor: pointer; font-size: 0.9rem;
+    transition: all 0.12s ease;
+}
+.chip:hover { border-color: var(--verde-claro); }
+.chip-active { background: var(--verde); color: #fff; border-color: var(--verde); }
+
+/* botón principal */
+.btn-primary {
+    width: 100%; margin-top: 0.6rem;
+    padding: 0.95rem 1rem; border: none; border-radius: 9px;
+    background: var(--verde); color: #fff; font-weight: 700; font-size: 1rem; cursor: pointer;
+}
+.btn-primary:hover:not(:disabled) { background: var(--verde-osc); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.alert-error {
+    background: #fdecef; color: var(--rojo); border: 1px solid #f3c2cc;
+    border-radius: 9px; padding: 0.7rem 0.9rem; margin-bottom: 1rem; font-size: 0.9rem;
+}
+
+.secure-note { text-align: center; color: var(--verde-claro); font-size: 0.82rem; margin-top: 1rem; }
+
+/* ---------- Pantalla de éxito ---------- */
+.exito { text-align: center; }
+.check-circle {
+    width: 84px; height: 84px; border-radius: 50%; background: #79d28e;
+    color: #fff; font-size: 2.6rem; line-height: 84px; margin: 0.5rem auto 1rem;
+}
+.exito-title { color: var(--verde); font-weight: 800; font-size: 1.7rem; margin: 0 0 1.5rem; }
+
+.resumen-card {
+    background: #fff; border: 1px solid var(--gris-borde); border-radius: 12px;
+    padding: 0.4rem 1.1rem; text-align: left; margin-bottom: 1.4rem;
+}
+.resumen-row {
+    display: flex; justify-content: space-between; padding: 0.85rem 0;
+    border-bottom: 1px solid #f0eee9;
+}
+.resumen-row:last-child { border-bottom: none; }
+.resumen-row span { color: #777; }
+.monto-ok { color: var(--verde-claro); }
+
+.saldo-restante-label { color: #777; margin: 0; }
+.saldo-restante { font-size: 2rem; font-weight: 800; color: var(--verde); margin: 0.2rem 0 1.5rem; }
+
+/* ---------- Blazor framework UI (preservado de la plantilla) ---------- */
+#blazor-error-ui {
+    color-scheme: light only;
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+    #blazor-error-ui .dismiss { cursor: pointer; position: absolute; right: 0.75rem; top: 0.5rem; }
+
+.loading-progress {
+    position: absolute; display: block; width: 8rem; height: 8rem;
+    inset: 20vh 0 auto 0; margin: 0 auto;
+}
+    .loading-progress circle {
+        fill: none; stroke: #e0e0e0; stroke-width: 0.6rem;
+        transform-origin: 50% 50%; transform: rotate(-90deg);
+    }
+        .loading-progress circle:last-child {
+            stroke: var(--verde-claro);
+            stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
+            transition: stroke-dasharray 0.05s ease-in-out;
+        }
+.loading-progress-text {
+    position: absolute; text-align: center; font-weight: bold;
+    inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
+}
+    .loading-progress-text:after { content: var(--blazor-load-percentage-text, "Cargando"); }

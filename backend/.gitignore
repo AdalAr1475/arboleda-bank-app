@@ -1,0 +1,8 @@
+# Artefactos de compilación .NET
+bin/
+obj/
+
+# Base de datos SQLite: se regenera sola al arrancar.
+banco.db
+banco.db-shm
+banco.db-wal
