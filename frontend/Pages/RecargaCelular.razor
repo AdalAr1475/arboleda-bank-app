@@ -162,15 +162,45 @@ else
         set => _celular = new string(value.Where(char.IsDigit).Take(9).ToArray());
     }
 
-    // --- Monto personalizado: texto numérico ---
+    // --- Monto personalizado: solo dígitos y un punto decimal (máx 2 decimales) ---
     private string MontoTexto
     {
         get => _montoTexto;
         set
         {
-            _montoTexto = value;
-            monto = TryParseMonto(value, out var m) ? m : null;
+            _montoTexto = SanitizarMonto(value);
+            monto = TryParseMonto(_montoTexto, out var m) ? m : null;
         }
+    }
+
+    // Filtra en vivo: ignora letras y símbolos, normaliza ',' a '.' y permite un solo
+    // separador decimal con un máximo de 2 decimales. La validación que cuenta sigue
+    // viviendo en el backend; esto es solo experiencia de usuario.
+    private static string SanitizarMonto(string raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return "";
+        var sb = new System.Text.StringBuilder();
+        var puntoUsado = false;
+        var decimales = 0;
+        foreach (var c in raw)
+        {
+            if (char.IsDigit(c))
+            {
+                if (puntoUsado)
+                {
+                    if (decimales >= 2) continue;
+                    decimales++;
+                }
+                sb.Append(c);
+            }
+            else if ((c == '.' || c == ',') && !puntoUsado)
+            {
+                puntoUsado = true;
+                sb.Append('.');
+            }
+            // cualquier otro carácter (letras, espacios, símbolos) se descarta
+        }
+        return sb.ToString();
     }
 
     private void SeleccionarPreset(decimal m)
